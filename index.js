@@ -1,10 +1,11 @@
 const express = require('express');
-const {Configuration, OpenAIApi} = require("openai");
+const { Configuration, OpenAIApi } = require("openai");
+
 const app = express();
 const cors = require('cors');
 require("dotenv").config();
 const configuration = new Configuration({
-    apiKey: process.env.OPENAI_API_KEY,
+    apiKey: process.env.OPENAI_API_KEY || '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',
 });
 const openai = new OpenAIApi(configuration);
 
@@ -23,6 +24,9 @@ app.post('/get-prompt-result', async (req, res) => {
     }
 
     try {
+        const history = [];
+        const messages = [];
+
         // Use the OpenAI SDK to create a completion
         // with the given prompt, model and maximum tokens
         if (model === 'image') {
@@ -33,13 +37,20 @@ app.post('/get-prompt-result', async (req, res) => {
             });*/
             return res.send('https://images.unsplash.com/photo-1655720837928-38b1a93298ac');
         }
-        const completion = await openai.createCompletion({
-            model: model === 'gpt' ? "gpt-3.5-turbo" : 'gpt-3.5-turbo', // model name
-            prompt: `Please reply below question in markdown format.\n ${prompt}`, // input prompt
-            max_tokens: model === 'gpt' ? 4000 : 8000 // Use max 8000 tokens for codex model
+        for (const [input_text, completion_text] of history) {
+            messages.push({ role: "user", content: input_text });
+            messages.push({ role: "assistant", content: completion_text });
+        }
+        messages.push({ role: "user", content: prompt });
+
+        const completion = await openai.createChatCompletion({
+            model: "gpt-3.5-turbo",
+            messages: messages,
         });
         // Send the generated text as the response
-        return res.send(completion.data.choices[0].text);
+        history.push([prompt, completion.data.choices[0].message.content]);
+
+        return res.send(completion.data.choices[0].message.content);
     } catch (error) {
         const errorMsg = error.response ? error.response.data.error : `${error}`;
         console.error(errorMsg);
