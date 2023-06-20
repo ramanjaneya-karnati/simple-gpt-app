@@ -26,15 +26,15 @@ app.post('/get-prompt-result', async (req, res) => {
         // Use the OpenAI SDK to create a completion
         // with the given prompt, model and maximum tokens
         if (model === 'image') {
-            const result = await openai.createImage({
+           /* const result = await openai.createImage({
                 prompt,
                 response_format: 'url',
                 size: '512x512'
-            });
-            return res.send(result.data.data[0].url);
+            });*/
+            return res.send('https://images.unsplash.com/photo-1655720837928-38b1a93298ac');
         }
         const completion = await openai.createCompletion({
-            model: model === 'gpt' ? "text-davinci-003" : 'code-davinci-002', // model name
+            model: model === 'gpt' ? "gpt-3.5-turbo" : 'gpt-3.5-turbo', // model name
             prompt: `Please reply below question in markdown format.\n ${prompt}`, // input prompt
             max_tokens: model === 'gpt' ? 4000 : 8000 // Use max 8000 tokens for codex model
         });
